@@ -1,4 +1,4 @@
-# Simple HTTP Client (Written in C)
+# Tiny C HTTP Client
 
 This is a minimal, lightweight HTTP client written in pure C that supports HTTP/1.1, chunked transfer encoding, multiple request methods, and custom headers. The client is designed to be memory-efficient and well-suited for scenarios with constrained storage, such as IoT devices.
 
