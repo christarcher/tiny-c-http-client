@@ -29,5 +29,5 @@ You can use musl-gcc if you need static-linked compile
 
 ```bash
 git clone https://github.com/christarcher/tiny-c-http-client.git
-gcc test.c http.c -static -s -Os
+musl-gcc test.c http.c -static -s -Os
 ./a.out

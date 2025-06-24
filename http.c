@@ -17,6 +17,21 @@
 
 #define HTTP_USER_AGENT "OpenwrtRouter/23.05.5"
 
+const char* HTTPMethodString[HTTP_METHOD_MAX] = {
+    [HTTP_GET]     = "GET",
+    [HTTP_POST]    = "POST",
+    [HTTP_PUT]     = "PUT",
+    [HTTP_DELETE]  = "DELETE",
+    [HTTP_OPTIONS] = "OPTIONS"
+};
+
+const char* HTTPContentTypeString[CONTENT_TYPE_MAX] = {
+    [CONTENT_TYPE_TEXT_PLAIN]       = "text/plain",
+    [CONTENT_TYPE_OCTET_STREAM]     = "application/octet-stream",
+    [CONTENT_TYPE_FORM_URLENCODED]  = "application/x-www-form-urlencoded",
+    [CONTENT_TYPE_APPLICATION_JSON] = "application/json"
+};
+
 // Generates a random Cloudflare IP address (from the range 104.16.x.x).
 char* GenerateRandomCloudflareIP(void) {
 	char* buffer = calloc(1, INET_ADDRSTRLEN + 1);
@@ -98,7 +113,6 @@ static bool sendTCPRawData(int sd, const char* data, size_t length) {
     while (remaining > 0) {
         ssize_t bytes = send(sd, data, remaining, MSG_NOSIGNAL);
         if (bytes < 0) {
-            // 出错分情况处理
             #ifdef DEBUG
             printf("[sendTCPRawData]: error when sending data: %d\n", errno);
             #endif
@@ -113,7 +127,7 @@ static bool sendTCPRawData(int sd, const char* data, size_t length) {
                 FD_ZERO(&writefds);
                 FD_SET(sd, &writefds);
 
-                // 等待 sd 可写
+                // wait sd
                 int ret = select(sd + 1, NULL, &writefds, NULL, &tv);
                 if (ret > 0) {
                     // check if writable
@@ -155,7 +169,6 @@ static bool sendTCPRawData(int sd, const char* data, size_t length) {
 // Expands the buffer if necessary, and handles errors such as EINTR and EAGAIN gracefully.
 // If Content-Length is available in the response, checks that the received content matches this length.
 static bool readTCPRawData(int sd, HTTPResponseInfo* msg) {
-	// 基本参数
 	size_t bufferExpandThreshold = 512; // when leftspace is under this value, realloc
 	size_t initBufferSize = 4096; // initial buffer size
 	size_t maxBufferSize = 1024 * 1024 * 64; // max buffer size
@@ -285,7 +298,7 @@ static bool parseHTTPMessage(HTTPResponseInfo* msg) {
         *lineEnd = '\0';
 
         if (cursor == lineEnd) {
-            cursor += 2; // 跳过空行
+            cursor += 2; // eat line
             break;
         }
 
@@ -377,10 +390,10 @@ error:
 // Includes optional body data if present.
 // Sends the request in raw TCP format.
 int SendHTTPRequest(HTTPRequestInfo* rq) {
-    const char* methodList[] = {"GET", "POST", "PUT", "DELETE", "OPTIONS"};
-    const char* contentTypeList[] = {"text/plain", "application/octet-stream", "application/x-www-form-urlencoded", "application/json"};
-
     if (!createTCPSocket(rq)) return -1; // no manually creating socket needed
+
+    if (rq->method < 0 || rq->method >= HTTP_METHOD_MAX) return -1;
+    if (rq->content_type < 0 || rq->content_type >= CONTENT_TYPE_MAX) return -1;
 
     bool sendBody = false;
     int offset = 0;
@@ -395,10 +408,10 @@ int SendHTTPRequest(HTTPRequestInfo* rq) {
         "User-Agent: "HTTP_USER_AGENT"\r\n"
         "Content-Type: %s\r\n"
         "Cookie: %s\r\n",
-        methodList[rq->method],
+        HTTPMethodString[rq->method],
         rq->query, 
         rq->host,
-        contentTypeList[rq->content_type],
+        HTTPContentTypeString[rq->content_type],
         rq->cookie
     );
 

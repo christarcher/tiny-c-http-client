@@ -2,18 +2,38 @@
 #define HTTP_H
 #include <stdbool.h>
 
+typedef enum {
+    HTTP_GET,
+    HTTP_POST,
+    HTTP_PUT,
+    HTTP_DELETE,
+    HTTP_OPTIONS,
+    HTTP_METHOD_MAX
+} HTTPMethod;
+
+typedef enum {
+    CONTENT_TYPE_TEXT_PLAIN,
+    CONTENT_TYPE_OCTET_STREAM,
+    CONTENT_TYPE_FORM_URLENCODED,
+    CONTENT_TYPE_APPLICATION_JSON,
+    CONTENT_TYPE_MAX
+} HTTPContentType;
+
+extern const char* HTTPMethodString[];
+extern const char* HTTPContentTypeString[];
+
 // Information required to initiate a request. The IP address and host are separated to allow custom hosts.
 typedef struct {
     char* ipaddr; // IP address
     char* host;   // Host header
     int port;     // Port
     int sd;       // Socket descriptor
-    int method;   // Request method: 0-4 corresponds to the array {"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+    HTTPMethod method;
     char* query;  // Query string
-    int content_type; // Content type: 0-3 corresponds to {"text/plain", "application/octet-stream", "application/x-www-form-urlencoded", "application/json"}
+    HTTPContentType content_type;
     char* cookie; // Cookie, if none, an empty string ""
     char* data;   // Data to be sent (can be NULL)
-    int data_length; // Length of data to be sent (can be 0)
+    int data_length; // Length of data to be sent (data_length >= 0 && data)
 } HTTPRequestInfo;
 
 // Response information

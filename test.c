@@ -4,9 +4,7 @@
 
 int main(void) {
     char* ipaddr = GenerateRandomCloudflareIP();
-    HTTPRequestInfo test = {ipaddr, "test.com", 80, -1, 0, "/cdn-cgi/trace", 0, "test", NULL, -1};
-    // if you need to download large file, you need to change max buffer size in the hardcoded in the http.c
-    // this program is used for iot communication, so i didn't set a big size for buffer;
+    HTTPRequestInfo test = {ipaddr, "test.com", 80, -1, HTTP_GET, "/cdn-cgi/trace", CONTENT_TYPE_TEXT_PLAIN, "test", NULL, -1};
 
     int a = SendHTTPRequest(&test);
     HTTPResponseInfo *b = FetchHTTPResponse(&test);
