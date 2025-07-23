@@ -394,6 +394,7 @@ int SendHTTPRequest(HTTPRequestInfo* rq) {
 
     if (rq->method < 0 || rq->method >= HTTP_METHOD_MAX) return -1;
     if (rq->content_type < 0 || rq->content_type >= CONTENT_TYPE_MAX) return -1;
+    if (!rq->cookie) rq->cookie = "";
 
     bool sendBody = false;
     int offset = 0;
@@ -419,7 +420,7 @@ int SendHTTPRequest(HTTPRequestInfo* rq) {
     // Since snprintf is used and the HTTP header content is relatively short, there won't be any overflow issues.
     if (sendBody) offset += snprintf(buffer + offset, sizeof(buffer) - offset, "Content-Length: %d\r\n", rq->data_length);
     offset += snprintf(buffer + offset, sizeof(buffer) - offset, "\r\n");
-    if (offset == sizeof(buffer)) return -1;
+    if (offset >= sizeof(buffer)) return -1;
     #ifdef DEBUG
     printf("[SendHTTPRequest]: about to send http request:\n--------Begin of content--------\n%s--------End of content--------\n", buffer);
     #endif
