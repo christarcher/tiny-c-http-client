@@ -262,6 +262,7 @@ static bool parseHTTPHeader(HTTPResponseInfo* msg, const char* line) {
     // and take the following content as the field value:
     size_t fieldNameLen = colon - line;
     char fieldName[64];
+    if (fieldNameLen >= sizeof(fieldName)) return false;
     strncpy(fieldName, line, fieldNameLen);
     fieldName[fieldNameLen] = '\0';
     const char* fieldValue = colon + 1;
